@@ -73,7 +73,6 @@ describe('chatterbox', function() {
         app.clearMessages();
         expect($('#chats').children().length).to.equal(0);
       });
-
       it('should be able to add messages to the DOM', function() {
         var message = {
           username: 'Mel Brooks',
@@ -82,7 +81,6 @@ describe('chatterbox', function() {
         };
 
         app.renderMessage(message);
-
         expect($('#chats').children().length).to.equal(1);
       });
 

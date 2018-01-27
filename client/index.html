@@ -9,13 +9,18 @@
     <script src="bower_components/jquery/dist/jquery.js"></script>
     <script src="bower_components/underscore/underscore.js"></script>
     <script>
+      
       // YOU DO NOT NEED TO EDIT THIS CODE
+      
+  
       if (!/(&|\?)username=/.test(window.location.search)) {
+        
         var newSearch = window.location.search;
         if (newSearch !== '' & newSearch !== '?') {
           newSearch += '&';
         }
-        newSearch += 'username=' + (prompt('What is your name?') || 'anonymous');
+        var name = prompt('What is your name?');
+        newSearch += 'username=' + (name || 'anonymous');
         window.location.search = newSearch;
       }
     </script>
@@ -31,8 +36,9 @@
       <input id="messageTextBox" value="type message here!" type="text">
       <button class="sendButton">send</button>
       <button id="getMessages">see messages</button>
-
-
+      <select id="roomSelect">
+        <!-- <option class="all">All Messages</option> -->
+      </select>
     </div>
     <div id="chats"></div>
   </body>
