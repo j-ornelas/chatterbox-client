@@ -74,6 +74,9 @@ form input[type=text] {
 .chat:hover {
     background-color: #ddd;
 }
+.addFriend:hover {
+    background-color: red;
+}
 
 .spinner {
     float: right;
