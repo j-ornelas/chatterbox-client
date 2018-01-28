@@ -19,8 +19,8 @@
         if (newSearch !== '' & newSearch !== '?') {
           newSearch += '&';
         }
-        var name = prompt('What is your name?');
-        newSearch += 'username=' + (name || 'anonymous');
+        // var name = prompt('What is your name?');
+        newSearch += 'username=' + (prompt('What is your name?') || 'anonymous');
         window.location.search = newSearch;
       }
     </script>
@@ -30,18 +30,29 @@
     <script src="scripts/interaction.js"></script>
   </head>
   <body>
+ 
+
     <div id="main">
       <h1>chatterbox</h1>
-      <!-- Your HTML goes here! -->
-      <input id="messageTextBox" value="type message here!" type="text">
-      <button class="sendButton">send</button>
-      <button id="getMessages">see messages</button>
+
+      <form id="send">
+      <input id="message" placeholder="type message here!" type="text">
+      <input class="sendButton submit" type="submit" value="Submit"></input>
+      </form>
+      <br><br>
+      <form id="roomForm">
+        <input id="createRoom" placeholder="room name" type="text">
+        <input class="roomButton submit" type="submit" value="Submit"></input>
+      </form>
+      <select id="friendSelect">
+      </select>      
       <select id="roomSelect">
-        <option class="all"></option>
+        <option class="all">Your main lobby</option>
       </select>
       <button id="loadRoom">Enter Room</button>
-      <select id="friendSelect">
-      </select>
+     
+      <button id="getMessages">see all rooms</button>
+
     </div>
 
     <div id="chats"></div>

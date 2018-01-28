@@ -1,9 +1,11 @@
 var app = {
   server: 'http://parse.sfm6.hackreactor.com/chatterbox/classes/messages',
-  roomList: {},
+  roomList: {'Your main lobby': true},
   friends: {},
   init: function() {
     app.fetch();
+    app.handleSubmit();
+      
   },
 
   send: function(message, room) {
@@ -15,7 +17,6 @@ var app = {
       data: message,
       contentType: 'application/json',
       success: function (data) {
-        console.log(message);
         console.log(`chatterbox: Message ${JSON.stringify(data)} sent`);
         app.fetch(room);
       },
@@ -28,7 +29,7 @@ var app = {
   fetch: function(room) {
     app.clearMessages();
     var ourData = {};
-    if (!room) {
+    if (!room || room === 'Your main lobby') {
       ourData = {   
         order: '-createdAt'
       };
@@ -47,11 +48,13 @@ var app = {
       contentType: 'application/json',
       success: function (data) {
         // app.renderMessage(data.results);
-        console.log(data);
         for (var i = 0; i < data.results.length; i++) {
-          app.renderMessage(data.results[i]);
+          let isFriend = false;
+          if (app.friends[data.results[i].username]) {
+            isFriend = true;
+          }
+          app.renderMessage(data.results[i], isFriend);
           let curRoom = data.results[i].roomname;
-          
           if (!app.roomList[curRoom]) {
             app.renderRoom(curRoom);
           }
@@ -68,60 +71,97 @@ var app = {
     $('#chats').children().remove();
   },
 
-  renderMessage: function(message) {
-    // $('#chats').append('<div class="chat"><p>' + '<span class="username" data-username>' + _.escape(message.username) + '</span> : ' + _.escape(message.message) + ' ' + '<span class="roomname" data-roomname>' + _.escape(message.roomname) + '</span></p></div>');
-    
-    // for (var i = 0; i < message.length; i++) {
-    //   $('#chats').append('<div class="chat">' + JSON.stringify(message.results[i].text) + '</div>');
-    // }
+  renderMessage: function(message, isFriend) {
+    // let context = this;
 
-    $('#chats').append('<div class="chat"><div class="addFriend" href="#">' + _.escape(JSON.stringify(message.username)) + "</div> : " + _.escape(JSON.stringify(message.text)) + '</div>');
+    if (isFriend) { 
+      $('#chats').append('<div class="chat username"><div class="friend" href="#">@' + _.escape(message.username) + '</div> ' + _.escape(message.text) + '</div>');
+    } else {
+      $('#chats').append('<div class="chat username"><div class="addFriend" href="#">@' + _.escape(message.username) + '</div>  ' + _.escape(message.text) + '</div>');
+    }
+    
+    app.handleUsernameClick();
+    // $('.addFriend').on('click', function() {
+    //   var currentUserName = $(this).text();
+    //     if (!app.friends[currentUserName]) {
+    //       app.friends[currentUserName] = true;
+    //       $(this).removeClass('addFriend').addClass('friend');
+    //       $('#friendSelect').append(`<option class="friend">${currentUserName}</option>`);
+    //       // app.fetch($('#roomSelect').val());
+    //     }
+    // });
+  },
+  
+  handleUsernameClick: function() {
     $('.addFriend').on('click', function() {
-      var currentUserName = $(this).text();
+    
+      var currentUserName = $(this).text().substr(1);
         if (!app.friends[currentUserName]) {
           app.friends[currentUserName] = true;
           $(this).removeClass('addFriend').addClass('friend');
           $('#friendSelect').append(`<option class="friend">${currentUserName}</option>`);
+          app.fetch($('#roomSelect').val());
         }
     });
   },
 
   renderRoom: function(room) {
-    if (app.roomList[room] === undefined) { 
+    if (!app.roomList[room] && room !== '') { 
       $('#roomSelect').append(`<option class="room">${room}</option>`);
       app.roomList[room] = true;
     }
+  },
+
+  handleSubmit: function() {
+    $('#send').submit(function(e) {
+      e.preventDefault();
+      var msg = $('#message').val();
+      var currentUser = window.location.search.slice(10);
+      //check if there is a current user name
+      // if (!currentUser) {
+      //   currentUser = 'anonymous';
+      // }
+      var currentRoom = $('#roomSelect').val();
+      //check if there is a current room
+      if (!currentRoom) {
+        currentRoom = 'none';
+      }
+      var messageToSend = {
+        username: currentUser,
+        text: msg,
+        roomname: currentRoom
+      };
+      app.send(JSON.stringify(messageToSend), currentRoom); 
+      app.fetch(currentRoom);
+      $('#message').val('');
+    });
   }
 };
 
 $(document).ready(function() {
   app.init();
   console.log(window.location.href);
-  $('#messageTextBox').on('click', function() {
-    $(this).attr('value', '');
-  });
-
-  $('.sendButton').on('click', function() {
-    var msg = $('#messageTextBox').val();
-    var currentUser = window.location.search.slice(10);
-    //check if there is a current user name
-    // if (!currentUser) {
-    //   currentUser = 'anonymous';
-    // }
-    var currentRoom = $('#roomSelect').val();
-    //check if there is a current room
-    if (!currentRoom) {
-      currentRoom = 'none';
-    }
-    var messageToSend = {
-      username: currentUser,
-      text: msg,
-      roomname: currentRoom
-    };
+  // $('.sendButton').on('submit', function() {
+  //   var msg = $('#messageTextBox').val();
+  //   var currentUser = window.location.search.slice(10);
+  //   //check if there is a current user name
+  //   // if (!currentUser) {
+  //   //   currentUser = 'anonymous';
+  //   // }
+  //   var currentRoom = $('#roomSelect').val();
+  //   //check if there is a current room
+  //   if (!currentRoom) {
+  //     currentRoom = 'none';
+  //   }
+  //   var messageToSend = {
+  //     username: currentUser,
+  //     text: msg,
+  //     roomname: currentRoom
+  //   };
     
-    app.send(JSON.stringify(messageToSend), currentRoom); 
-    
-  });
+  //   app.send(JSON.stringify(messageToSend), currentRoom); 
+  //   app.fetch(currentRoom);
+  // });
   
   $('#getMessages').on('click', function() {
     app.fetch();
@@ -131,6 +171,38 @@ $(document).ready(function() {
     var currentRoom = $('#roomSelect').val();
     app.fetch(currentRoom);
   });
+  
+  $('#roomForm').submit(function(event) {
+    event.preventDefault();
+    app.renderRoom($('#createRoom').val());
+    $('#createRoom').val('');
+  });
+
+
+  // $('#messageTextBox').keypress(function(event) {
+  //   if (event.keyCode === 13) {
+  //     var msg = $('#messageTextBox').val();
+  //     var currentUser = window.location.search.slice(10);
+  //     //check if there is a current user name
+  //     // if (!currentUser) {
+  //     //   currentUser = 'anonymous';
+  //     // }
+  //     var currentRoom = $('#roomSelect').val();
+  //     //check if there is a current room
+  //     if (currentRoom === 'Your main lobby' || !currentRoom) {
+  //       currentRoom = 'none';
+  //     }
+  //     var messageToSend = {
+  //       username: currentUser,
+  //       text: msg,
+  //       roomname: currentRoom
+  //     };
+      
+  //     app.send(JSON.stringify(messageToSend), currentRoom); 
+  //     app.fetch(currentRoom);
+  //     $(this).val('');
+  //   }
+  // });
 
 
 
